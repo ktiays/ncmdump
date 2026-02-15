@@ -1,47 +1,54 @@
 # Ncmdump
 
-`Ncmdump` 是一个纯 Swift Package 形式的库，用于将网易云音乐 `*.ncm` 文件解密为 `mp3/flac`，并可修复音频元数据。
+`Ncmdump` is a Swift Package library for decrypting NetEase Cloud Music `*.ncm` files into `mp3` or `flac` outputs, with metadata repair support.
 
-本仓库不再提供可执行文件（CLI）与 CMake 构建，仅提供库能力。
+This repository is library-only. It no longer provides a CLI executable or CMake-based build flow.
 
-最低平台版本：`iOS 16.4`、`macOS 13.3`。
+## Platform Requirements
 
-## 特性
+- iOS 16.4+
+- macOS 13.3+
 
-- Swift Package Manager 原生集成
-- 复用原有 C++ 解密核心算法
-- 保留基础 C 接口（`CreateNeteaseCrypt` / `Dump` / `FixMetadata` / `DestroyNeteaseCrypt`）
-- 提供 Swift `actor` 封装（`NcmdumpConverter`）
+## Highlights
 
-## 依赖
+- Native Swift Package Manager integration
+- Reuses the proven C++ decryption core
+- Preserves the C compatibility API:
+  - `CreateNeteaseCrypt`
+  - `Dump`
+  - `FixMetadata`
+  - `DestroyNeteaseCrypt`
+- Provides a Swift-first async API via `NcmConverter`
 
-本包依赖 TagLib 的 SwiftPM 包（固定到指定 commit）：
+## Dependency
 
-- 仓库：`https://github.com/ktiays/taglib.git`
-- revision：`5f0c9f71c8626e8f85c2df4200680a93d1b574c1`
+This package depends on TagLib via SwiftPM and is pinned to:
 
-## 构建
+- Repository: `https://github.com/ktiays/taglib.git`
+- Revision: `5f0c9f71c8626e8f85c2df4200680a93d1b574c1`
+
+## Build
 
 ```bash
 swift build
 ```
 
-## Swift 用法
+## Swift API Example
 
 ```swift
 import Ncmdump
 
-let converter = try NcmdumpConverter(inputPath: "/path/to/test.ncm")
+let converter = try NcmConverter(inputPath: "/path/to/input.ncm")
 try await converter.dump(outputPath: "/path/to/output")
 try await converter.fixMetadata()
 ```
 
-## C 接口用法
+## C API Example
 
 ```swift
 import CNcmdump
 
-let handle = CreateNeteaseCrypt("/path/to/test.ncm")
+let handle = CreateNeteaseCrypt("/path/to/input.ncm")
 let result = Dump(handle, "/path/to/output")
 FixMetadata(handle)
 DestroyNeteaseCrypt(handle)

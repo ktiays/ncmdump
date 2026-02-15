@@ -1,7 +1,7 @@
 import Foundation
 import CNcmdump
 
-private final class NcmdumpHandleBox: @unchecked Sendable {
+private final class NcmHandleBox: @unchecked Sendable {
     var raw: OpaquePointer?
 
     init(raw: OpaquePointer) {
@@ -15,15 +15,15 @@ private final class NcmdumpHandleBox: @unchecked Sendable {
     }
 }
 
-public enum NcmdumpError: Error, Equatable {
+public enum NcmError: Error, Equatable {
     case createFailed(path: String)
     case invalidHandle
     case dumpFailed(code: Int32, message: String)
     case fixMetadataFailed(code: Int32, message: String)
 }
 
-public actor NcmdumpConverter {
-    private let handleBox: NcmdumpHandleBox
+public actor NcmConverter {
+    private let handleBox: NcmHandleBox
 
     public init(inputPath: String) throws {
         let createdHandle = inputPath.withCString { pointer in
@@ -31,15 +31,15 @@ public actor NcmdumpConverter {
         }
 
         guard let createdHandle else {
-            throw NcmdumpError.createFailed(path: inputPath)
+            throw NcmError.createFailed(path: inputPath)
         }
 
-        self.handleBox = NcmdumpHandleBox(raw: createdHandle)
+        self.handleBox = NcmHandleBox(raw: createdHandle)
     }
 
     public func dump(outputPath: String? = nil) throws {
         guard let handle = handleBox.raw else {
-            throw NcmdumpError.invalidHandle
+            throw NcmError.invalidHandle
         }
 
         let dumpResult: Int32
@@ -54,13 +54,13 @@ public actor NcmdumpConverter {
         guard dumpResult == 0 else {
             let code = Int32(GetLastErrorCode(handle))
             let message = String(cString: GetLastErrorMessage(handle))
-            throw NcmdumpError.dumpFailed(code: code, message: message)
+            throw NcmError.dumpFailed(code: code, message: message)
         }
     }
 
     public func fixMetadata() throws {
         guard let handle = handleBox.raw else {
-            throw NcmdumpError.invalidHandle
+            throw NcmError.invalidHandle
         }
 
         FixMetadata(handle)
@@ -68,7 +68,7 @@ public actor NcmdumpConverter {
         let code = Int32(GetLastErrorCode(handle))
         guard code == Int32(NCMDUMP_ERROR_NONE) else {
             let message = String(cString: GetLastErrorMessage(handle))
-            throw NcmdumpError.fixMetadataFailed(code: code, message: message)
+            throw NcmError.fixMetadataFailed(code: code, message: message)
         }
     }
 }

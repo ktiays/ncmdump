@@ -15,11 +15,11 @@ private:
 	std::string mArtist;
 	std::string mFormat;
 	std::string mName;
-	int mDuration;
-	int mBitrate;
+	int mDuration{0};
+	int mBitrate{0};
 
 private:
-	cJSON* mRaw;
+	cJSON* mRaw{nullptr};
 
 public:
 	NeteaseMusicMetadata(cJSON*);
@@ -33,7 +33,7 @@ public:
 
 };
 
-class NeteaseCrypt {
+class NeteaseCryptCore {
 
 private:
 	static const unsigned char sCoreKey[17];
@@ -44,11 +44,11 @@ private:
 private:
 	std::string mFilepath;
 	std::filesystem::path mDumpFilepath;
-	NcmFormat mFormat;
+	NcmFormat mFormat{NcmFormat::MP3};
 	std::string mImageData;
 	std::ifstream mFile;
 	unsigned char mKeyBox[256]{};
-	NeteaseMusicMetadata* mMetaData;
+	NeteaseMusicMetadata* mMetaData{nullptr};
 
 private:
 	bool isNcmFile();
@@ -62,8 +62,8 @@ public:
 	const std::filesystem::path dumpFilepath() const { return mDumpFilepath; }
 
 public:
-	NeteaseCrypt(std::string const&);
-	~NeteaseCrypt();
+	NeteaseCryptCore(std::string const&);
+	~NeteaseCryptCore();
 
 public:
 	void Dump(std::string const&);

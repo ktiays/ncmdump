@@ -1,0 +1,29 @@
+name: SwiftPM CI
+
+on:
+  push:
+    branches: ["main", "dev"]
+  pull_request:
+
+jobs:
+  build-and-test:
+    name: Build and Test (macOS)
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build
+        run: swift build
+
+      - name: Test
+        run: swift test
+
+      - name: iOS Compile Check
+        run: |
+          xcodebuild \
+            -scheme Ncmdump \
+            -destination 'generic/platform=iOS Simulator' \
+            CODE_SIGNING_ALLOWED=NO \
+            build

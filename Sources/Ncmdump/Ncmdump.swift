@@ -1,0 +1,74 @@
+import Foundation
+import CNcmdump
+
+private final class NcmdumpHandleBox: @unchecked Sendable {
+    var raw: OpaquePointer?
+
+    init(raw: OpaquePointer) {
+        self.raw = raw
+    }
+
+    deinit {
+        if let raw {
+            DestroyNeteaseCrypt(raw)
+        }
+    }
+}
+
+public enum NcmdumpError: Error, Equatable {
+    case createFailed(path: String)
+    case invalidHandle
+    case dumpFailed(code: Int32, message: String)
+    case fixMetadataFailed(code: Int32, message: String)
+}
+
+public actor NcmdumpConverter {
+    private let handleBox: NcmdumpHandleBox
+
+    public init(inputPath: String) throws {
+        let createdHandle = inputPath.withCString { pointer in
+            CreateNeteaseCrypt(pointer)
+        }
+
+        guard let createdHandle else {
+            throw NcmdumpError.createFailed(path: inputPath)
+        }
+
+        self.handleBox = NcmdumpHandleBox(raw: createdHandle)
+    }
+
+    public func dump(outputPath: String? = nil) throws {
+        guard let handle = handleBox.raw else {
+            throw NcmdumpError.invalidHandle
+        }
+
+        let dumpResult: Int32
+        if let outputPath {
+            dumpResult = outputPath.withCString { pointer in
+                Dump(handle, pointer)
+            }
+        } else {
+            dumpResult = Dump(handle, nil)
+        }
+
+        guard dumpResult == 0 else {
+            let code = Int32(GetLastErrorCode(handle))
+            let message = String(cString: GetLastErrorMessage(handle))
+            throw NcmdumpError.dumpFailed(code: code, message: message)
+        }
+    }
+
+    public func fixMetadata() throws {
+        guard let handle = handleBox.raw else {
+            throw NcmdumpError.invalidHandle
+        }
+
+        FixMetadata(handle)
+
+        let code = Int32(GetLastErrorCode(handle))
+        guard code == Int32(NCMDUMP_ERROR_NONE) else {
+            let message = String(cString: GetLastErrorMessage(handle))
+            throw NcmdumpError.fixMetadataFailed(code: code, message: message)
+        }
+    }
+}

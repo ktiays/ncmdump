@@ -1,4 +1,4 @@
-#include "ncmcrypt.h"
+#include "ncmcrypt_core.hpp"
 #include "aes.h"
 #include "base64.h"
 #include "cJSON.h"
@@ -18,10 +18,10 @@
 #pragma warning(disable:4267)
 #pragma warning(disable:4244)
 
-const unsigned char NeteaseCrypt::sCoreKey[17] = {0x68, 0x7A, 0x48, 0x52, 0x41, 0x6D, 0x73, 0x6F, 0x35, 0x6B, 0x49, 0x6E, 0x62, 0x61, 0x78, 0x57, 0};
-const unsigned char NeteaseCrypt::sModifyKey[17] = {0x23, 0x31, 0x34, 0x6C, 0x6A, 0x6B, 0x5F, 0x21, 0x5C, 0x5D, 0x26, 0x30, 0x55, 0x3C, 0x27, 0x28, 0};
+const unsigned char NeteaseCryptCore::sCoreKey[17] = {0x68, 0x7A, 0x48, 0x52, 0x41, 0x6D, 0x73, 0x6F, 0x35, 0x6B, 0x49, 0x6E, 0x62, 0x61, 0x78, 0x57, 0};
+const unsigned char NeteaseCryptCore::sModifyKey[17] = {0x23, 0x31, 0x34, 0x6C, 0x6A, 0x6B, 0x5F, 0x21, 0x5C, 0x5D, 0x26, 0x30, 0x55, 0x3C, 0x27, 0x28, 0};
 
-const unsigned char NeteaseCrypt::mPng[8] = {0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A};
+const unsigned char NeteaseCryptCore::mPng[8] = {0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A};
 
 static void aesEcbDecrypt(const unsigned char *key, std::string &src, std::string &dst)
 {
@@ -117,7 +117,7 @@ NeteaseMusicMetadata::NeteaseMusicMetadata(cJSON *raw)
     }
 }
 
-bool NeteaseCrypt::openFile(std::string const &path)
+bool NeteaseCryptCore::openFile(std::string const &path)
 {
     mFile.open(std::filesystem::u8path(path), std::ios::in | std::ios::binary);
     if (!mFile.is_open())
@@ -130,7 +130,7 @@ bool NeteaseCrypt::openFile(std::string const &path)
     }
 }
 
-bool NeteaseCrypt::isNcmFile()
+bool NeteaseCryptCore::isNcmFile()
 {
     unsigned int header;
 
@@ -149,7 +149,7 @@ bool NeteaseCrypt::isNcmFile()
     return true;
 }
 
-int NeteaseCrypt::read(char *s, std::streamsize n)
+int NeteaseCryptCore::read(char *s, std::streamsize n)
 {
     mFile.read(s, n);
 
@@ -163,7 +163,7 @@ int NeteaseCrypt::read(char *s, std::streamsize n)
     return gcount;
 }
 
-void NeteaseCrypt::buildKeyBox(unsigned char *key, int keyLen)
+void NeteaseCryptCore::buildKeyBox(unsigned char *key, int keyLen)
 {
     int i;
     for (i = 0; i < 256; ++i)
@@ -188,7 +188,7 @@ void NeteaseCrypt::buildKeyBox(unsigned char *key, int keyLen)
     }
 }
 
-std::string NeteaseCrypt::mimeType(std::string &data)
+std::string NeteaseCryptCore::mimeType(std::string &data)
 {
     if (memcmp(data.c_str(), mPng, 8) == 0)
     {
@@ -198,14 +198,14 @@ std::string NeteaseCrypt::mimeType(std::string &data)
     return std::string("image/jpeg");
 }
 
-void NeteaseCrypt::FixMetadata()
+void NeteaseCryptCore::FixMetadata()
 {
 
     TagLib::File *audioFile;
     TagLib::Tag *tag;
     TagLib::ByteVector vector(mImageData.c_str(), mImageData.length());
 
-    if (mFormat == NeteaseCrypt::MP3)
+    if (mFormat == NeteaseCryptCore::MP3)
     {
         audioFile = new TagLib::MPEG::File(mDumpFilepath.c_str());
         tag = dynamic_cast<TagLib::MPEG::File *>(audioFile)->ID3v2Tag(true);
@@ -220,7 +220,7 @@ void NeteaseCrypt::FixMetadata()
             dynamic_cast<TagLib::ID3v2::Tag *>(tag)->addFrame(frame);
         }
     }
-    else if (mFormat == NeteaseCrypt::FLAC)
+    else if (mFormat == NeteaseCryptCore::FLAC)
     {
         audioFile = new TagLib::FLAC::File(mDumpFilepath.c_str());
         tag = audioFile->tag();
@@ -246,10 +246,10 @@ void NeteaseCrypt::FixMetadata()
     // tag->setComment(TagLib::String("Create by taurusxin/ncmdump.", TagLib::String::UTF8));
 
     audioFile->save();
-    audioFile->~File();
+    delete audioFile;
 }
 
-void NeteaseCrypt::Dump(std::string const &outputDir = "")
+void NeteaseCryptCore::Dump(std::string const &outputDir)
 {
     if (outputDir.empty())
     {
@@ -279,12 +279,12 @@ void NeteaseCrypt::Dump(std::string const &outputDir = "")
             if (buffer[0] == 0x49 && buffer[1] == 0x44 && buffer[2] == 0x33)
             {
                 mDumpFilepath = mDumpFilepath.replace_extension("mp3");
-                mFormat = NeteaseCrypt::MP3;
+                mFormat = NeteaseCryptCore::MP3;
             }
             else
             {
                 mDumpFilepath = mDumpFilepath.replace_extension("flac");
-                mFormat = NeteaseCrypt::FLAC;
+                mFormat = NeteaseCryptCore::FLAC;
             }
 
             output.open(mDumpFilepath, std::ofstream::out | std::ofstream::binary);
@@ -297,7 +297,7 @@ void NeteaseCrypt::Dump(std::string const &outputDir = "")
     output.close();
 }
 
-NeteaseCrypt::~NeteaseCrypt()
+NeteaseCryptCore::~NeteaseCryptCore()
 {
     if (mMetaData != NULL)
     {
@@ -307,7 +307,7 @@ NeteaseCrypt::~NeteaseCrypt()
     mFile.close();
 }
 
-NeteaseCrypt::NeteaseCrypt(std::string const &path)
+NeteaseCryptCore::NeteaseCryptCore(std::string const &path)
 {
     if (!openFile(path))
     {

@@ -1,0 +1,14 @@
+{
+  "originHash" : "ad9a6e3b5d9bc55659cbe8aefba8b15fe3b642b30f38413ccb1664c482d31a9e",
+  "pins" : [
+    {
+      "identity" : "taglib",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/ktiays/taglib.git",
+      "state" : {
+        "revision" : "5f0c9f71c8626e8f85c2df4200680a93d1b574c1"
+      }
+    }
+  ],
+  "version" : 3
+}

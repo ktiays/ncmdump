@@ -1,11 +1,15 @@
-*.exe
-ncmdump
+# macOS / editor
+.DS_Store
+.vscode/
+.idea/
 
-.vscode
-.idea
+# Swift Package Manager / Xcode
+.build/
+.swiftpm/
+DerivedData/
+*.xcworkspace
 
-build
-
-cmake-build-*
-
-vcpkg_installed
+# Legacy build outputs (kept for safety when users build old branches)
+build/
+cmake-build-*/
+vcpkg_installed/

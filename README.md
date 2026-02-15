@@ -46,11 +46,3 @@ let result = Dump(handle, "/path/to/output")
 FixMetadata(handle)
 DestroyNeteaseCrypt(handle)
 ```
-
-## 测试
-
-```bash
-swift test
-```
-
-测试资源使用 `Tests/NcmdumpTests/Resources/test.ncm`。

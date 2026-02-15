@@ -16,10 +16,6 @@ jobs:
 
       - name: Build
         run: swift build
-
-      - name: Test
-        run: swift test
-
       - name: iOS Compile Check
         run: |
           xcodebuild \

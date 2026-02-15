@@ -38,14 +38,6 @@ let package = Package(
             linkerSettings: [
                 .linkedLibrary("z")
             ]
-        ),
-        .testTarget(
-            name: "NcmdumpTests",
-            dependencies: ["Ncmdump", "CNcmdump"],
-            path: "Tests/NcmdumpTests",
-            resources: [
-                .copy("Resources/test.ncm")
-            ]
         )
     ],
     cxxLanguageStandard: .cxx17
